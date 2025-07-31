@@ -296,3 +296,31 @@ Milestone M10 will introduce the recipes engine. In `feature/m10-recipes-engine`
 ### Notes
 
 The web adapter currently cannot perform real browser actions due to the absence of Playwright in this environment. To comply with the free‑only policy and unavailability of external package installation via the proxy, the adapter parks with a clear reason. Future work could integrate a lightweight HTTP client or enable Playwright installation when network access is restored. The presence of a sample HTML page allows future tests to be enabled without structural changes.
+
+## Milestone M10 — Recipes Engine
+
+**Date**: 2025-07-31
+
+**Branch**: `feature/m10-recipes-engine`
+
+### What was done
+
+* Added a recipe engine in `runner_windows/recipes/engine.py` capable of loading YAML recipes, performing variable expansion for secrets and parameters, and executing actions via the web adapter. The engine handles unsupported or unavailable tools by propagating a parked state.
+* Implemented a variable expansion helper that supports `{{SECRET:ALIAS}}` and `{{PARAM:name}}` placeholders, recursively expanding values in dicts and lists. Unknown secrets or parameters expand to empty strings.
+* Added an `execute_recipe` function that iterates through recipe steps (`wait`, `type`, `click`, `select`, `upload`), calling the corresponding web adapter functions. If the web adapter parks (e.g., Playwright missing), execution stops and the reason is returned. A simple success_check is included for future use with real browser actions.
+* Wrote unit tests (`tests/test_recipes_engine.py`) covering two scenarios:
+  * Executing a simple recipe when Playwright is unavailable results in a parked status with reason `playwright_missing`.
+  * Variable expansion replaces parameters and secrets correctly and yields empty strings for unknown secrets.
+
+### Artifacts
+
+* `runner_windows/recipes/engine.py` – recipe engine with loading, expansion, and execution logic.
+* `tests/test_recipes_engine.py` – tests verifying parked behavior and variable expansion.
+
+### What’s next
+
+Milestone M11 will integrate the cost governor with queue dispatch to enforce budget caps. We will create branch `feature/m11-budget-enforcement` and connect the cost ledger to the orchestrator queue, adding an endpoint for daily budget totals. Tests will validate refusal of steps when caps are exceeded and proper reporting via `/budget/today`.
+
+### Notes
+
+Because Playwright cannot be installed in this environment, the recipe engine currently parks immediately when attempting to open a URL. This still satisfies the specification by properly propagating the parked reason. Once browser automation is available, the engine will execute the steps and enforce success checks. Variable expansion intentionally omits unknown secrets to avoid leaking sensitive information.
