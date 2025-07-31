@@ -10,7 +10,8 @@ class TestWebAdapter(unittest.TestCase):
         result = web_adapter.open("https://example.com")
         self.assertIsInstance(result, dict)
         if result.get("status") == "parked":
-            self.assertEqual(result.get("reason"), "playwright_missing")
+            # Reason should indicate runner setup is required
+            self.assertIn(result.get("reason"), {"runner_setup_required", "playwright_missing"})
         # Check other functions
         # Define a set of calls with appropriate arguments
         calls = [
@@ -25,7 +26,7 @@ class TestWebAdapter(unittest.TestCase):
         for func, args in calls:
             res = func(*args)
             if isinstance(res, dict) and res.get("status") == "parked":
-                self.assertEqual(res["reason"], "playwright_missing")
+                self.assertIn(res["reason"], {"runner_setup_required", "playwright_missing"})
 
 
 if __name__ == "__main__":

@@ -2,3 +2,4 @@ __pycache__/
 **/__pycache__/
 *.pyc
 runner_windows/config/secrets.json
+runner_windows/artifacts/
