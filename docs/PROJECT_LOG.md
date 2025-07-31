@@ -208,3 +208,33 @@ Milestone M7 introduces deterministic adapters for file operations and OCR. A ne
 ### Notes
 
 The runner currently processes steps locally without interacting with real actions; dispatch only returns a placeholder result. Future milestones will fill in the dispatch table to call into real adapters such as web, files, and OCR. The kill switch uses an in‑process flag; wiring a global hotkey may require platform‑specific libraries on Windows and will be addressed in later iterations.
+
+## Milestone M7 — Files & OCR Adapters
+
+**Date**: 2025-07-31
+
+**Branch**: `feature/m7-actions-files-ocr`
+
+### What was done
+
+* Implemented the first deterministic adapters in `runner_windows/actions`:
+  * `files_adapter.py` provides `write`, `read`, `move`, and `hash_file` functions. Each function returns a dictionary containing the file path and a SHA256 hash to be used in evidence objects.
+  * `ocr_adapter.py` provides a placeholder `screenshot` function that parks with a clear reason when screenshot capture is unavailable, and a `read` function that attempts to use `pytesseract` and `Pillow` to perform OCR on an image. When dependencies are missing, the function returns a parked object with reason `tesseract_missing`.
+* Added unit tests (`tests/test_actions_files_ocr.py`) that verify:
+  * A file can be written, hashed, read, moved, and that the hash remains consistent across the move.
+  * The OCR adapter properly reports a parked status when Tesseract/Pillow are not installed and returns text when OCR succeeds (if Tesseract were available).
+* Updated the `.gitignore` in a previous commit, which continues to ignore Python cache files.
+
+### Artifacts
+
+* `runner_windows/actions/files_adapter.py` – file operations adapter.
+* `runner_windows/actions/ocr_adapter.py` – OCR adapter with missing‑dependency handling.
+* `tests/test_actions_files_ocr.py` – unit tests for both adapters.
+
+### What’s next
+
+Milestone M8 focuses on the secrets adapter. We will create `feature/m8-actions-secrets` and implement `secrets.get`, `secrets.set`, and rotation stubs, ensuring that secrets are never logged. Unit tests will verify redaction behavior and missing secrets handling.
+
+### Notes
+
+The OCR adapter currently falls back to a parked state when dependencies are absent. This is acceptable under the free‑only policy, as installing Tesseract would require additional system packages not present in the container. In environments where Tesseract is available, the adapter will return extracted text. Future improvements may provide a more robust screenshot implementation using OS APIs or pyautogui.
