@@ -32,4 +32,4 @@ jobs:
         run: echo "Format check: no code to format"
       - name: Run tests
         run: |
-          poetry run pytest -q
+          python -m unittest discover -v -s tests
