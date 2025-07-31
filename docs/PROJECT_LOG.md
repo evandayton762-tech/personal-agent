@@ -270,3 +270,29 @@ Milestone M9 will implement the web adapter using Playwright, persistent profile
 ### Notes
 
 The secrets adapter intentionally writes to a local JSON file outside of version control and never logs secret values. Vault integrations (Bitwarden, 1Password) remain unimplemented and will result in a parked reason if requested. Redaction rules are enforced in tests by checking that secret values do not appear in runner logs.
+
+## Milestone M9 — Web Adapter (Playwright Stub)
+
+**Date**: 2025-07-31
+
+**Branch**: `feature/m9-actions-web`
+
+### What was done
+
+* Added `runner_windows/actions/web_adapter.py` implementing stub functions for web interactions (`open`, `wait`, `type`, `click`, `select`, `upload`, `get_text`, `screenshot`). Each function first checks whether Playwright is installed. Because the environment cannot install Playwright due to network restrictions, the functions return a parked dictionary with reason `playwright_missing` and a descriptive note.
+* Created a simple test HTML file at `tests/data/test_page.html` with an input field and a button for potential future Playwright tests.
+* Added unit tests in `tests/test_actions_web.py` to verify that each web adapter function returns a parked status when Playwright is unavailable. The tests supply appropriate parameters to each function and assert that the `reason` is `playwright_missing`.
+
+### Artifacts
+
+* `runner_windows/actions/web_adapter.py` – stubbed web adapter with Playwright checks.
+* `tests/data/test_page.html` – sample HTML page for future interactive tests.
+* `tests/test_actions_web.py` – unit tests for the web adapter stub.
+
+### What’s next
+
+Milestone M10 will introduce the recipes engine. In `feature/m10-recipes-engine`, we will create a YAML loader and executor that maps recipe steps to the appropriate web actions, performs variable substitution, and checks for success. Because Playwright is unavailable, the executor may need to park recipes that require browser automation.
+
+### Notes
+
+The web adapter currently cannot perform real browser actions due to the absence of Playwright in this environment. To comply with the free‑only policy and unavailability of external package installation via the proxy, the adapter parks with a clear reason. Future work could integrate a lightweight HTTP client or enable Playwright installation when network access is restored. The presence of a sample HTML page allows future tests to be enabled without structural changes.
