@@ -120,3 +120,30 @@ Milestone M4 introduces the cost governor and ledger. We will create the `featur
 ### Notes
 
 The intake manager currently uses simplified heuristics for scoring and expected gain. These will be refined in future iterations. As before, branches are merged locally due to lack of remote connectivity.
+
+## Milestone M4 — Cost Governor & Ledger
+
+**Date**: 2025-07-31
+
+**Branch**: `feature/m4-cost-governor`
+
+### What was done
+
+* Added a cost governor module (`orchestrator/cost/governor.py`) with static token estimation per adapter type and functions to estimate plan tokens and downscope plans when exceeding the per-task token cap.
+* Implemented a cost ledger (`orchestrator/cost/ledger.py`) that writes JSONL entries for each executed step and provides aggregated totals for the current day. The ledger creates a `/memory/cost_ledger.jsonl` file automatically.
+* Created unit tests (`tests/test_cost_governor.py`) that verify downscoping behavior and correct aggregation of ledger entries.
+
+### Artifacts
+
+* `orchestrator/cost/governor.py` – token estimation and downscoping logic.
+* `orchestrator/cost/ledger.py` – ledger implementation with `append()` and `totals_today()` functions.
+* `memory/cost_ledger.jsonl` – ledger file (created during runtime).
+* `tests/test_cost_governor.py` – tests covering plan downscoping and ledger aggregation.
+
+### What’s next
+
+The next milestone, M5, introduces the skeleton of the orchestrator service with FastAPI endpoints, an in-memory queue, and a WebSocket for step dispatch. We will create the `feature/m5-orchestrator-service` branch to implement these features, including a temporary planner adapter that returns a static plan. A local runner stub will be used to verify connectivity.
+
+### Notes
+
+Static token estimates are conservative placeholders; future improvements will refine them. The ledger path is relative to the repository (`memory/cost_ledger.jsonl`) and ensures that evidence persists across runs.
