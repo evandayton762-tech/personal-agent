@@ -178,3 +178,33 @@ Milestone M6 will implement the runner skeleton. We will create the `feature/m6-
 ### Notes
 
 The orchestrator currently returns a hardcoded plan and does not support persistence across restarts. Future milestones will extend the planner and queue functionality, and integrate the cost governor and budget enforcement.
+
+## Milestone M6 — Runner Skeleton
+
+**Date**: 2025-07-31
+
+**Branch**: `feature/m6-runner-skeleton`
+
+### What was done
+
+* Added a new `Runner` class in `runner_windows/runner.py` that connects to the orchestrator’s WebSocket, sends heartbeat messages every 10 seconds, validates incoming steps, dispatches them via a placeholder dispatch table, and implements a kill switch. The runner writes logs to a timestamped file under `runner_windows/logs/` with timestamps and redaction logic.
+* Implemented `validate_step` to enforce the allowed set of adapter types and return failure for unknown tools.
+* Implemented `dispatch_step` to return a dummy `ok` result with placeholder evidence when not killed. When the kill flag is set, it returns a `failed` result with a `killed` note and logs the event.
+* Added a `heartbeat` coroutine that reports runner status and free disk space over the WebSocket.
+* Added a `kill()` method to set a flag that causes the next dispatch to return a failure.
+* Added unit tests in `tests/test_runner.py` verifying that a valid step is processed and logged correctly, and that the kill switch produces a failed result.
+* Added a `.gitignore` file to exclude `__pycache__` directories and `.pyc` files from version control.
+
+### Artifacts
+
+* `runner_windows/runner.py` – implementation of the runner skeleton with heartbeats, dispatch, kill switch, and logging.
+* `tests/test_runner.py` – unit tests covering normal dispatch and kill switch behavior.
+* `.gitignore` – new file to ignore Python cache directories and compiled bytecode.
+
+### What’s next
+
+Milestone M7 introduces deterministic adapters for file operations and OCR. A new branch `feature/m7-actions-files-ocr` will be created to implement the `files` and `ocr` adapters, including hashing and OCR via Tesseract when available, along with unit tests. After that we will proceed to implement the secrets adapter and web actions.
+
+### Notes
+
+The runner currently processes steps locally without interacting with real actions; dispatch only returns a placeholder result. Future milestones will fill in the dispatch table to call into real adapters such as web, files, and OCR. The kill switch uses an in‑process flag; wiring a global hotkey may require platform‑specific libraries on Windows and will be addressed in later iterations.
