@@ -383,3 +383,38 @@ Milestone M13 will wire the runner dispatch so that steps with various adapter t
 ### Notes
 
 The planner currently uses simple heuristics and static token estimates instead of an LLM. This approach satisfies the requirement to produce schema‑valid plans while respecting per‑task token caps. When access to LLMs becomes available, this module can be upgraded to generate richer plans via a prompt while maintaining the same interface.
+
+## Milestone M13 — Runner Enablement & Web Adapter
+
+**Date**: 2025-07-31
+
+**Branch**: `feature/m13-runner-enable-web`
+
+### What was done
+
+* Added a PowerShell script `runner_windows/setup.ps1` documenting how to prepare a Windows machine for browser and OCR automation. The script lists manual steps to install Python 3.11, Playwright (including the Chromium runtime), and optionally Tesseract OCR. It does not execute these steps itself, respecting the free‑only policy.
+* Updated `runner_windows/README.md` with instructions on running `setup.ps1` and how to start the runner using `python -m runner_windows.runner --server ws://<orchestrator-host>:<port>/ws` once dependencies are installed.
+* Implemented a fully functional web adapter in `runner_windows/actions/web_adapter.py`. The adapter now:
+  * Detects whether Playwright is available and, if so, starts a persistent browser context per domain under `runner_windows/profiles`.
+  * Provides `open`, `wait`, `type`, `click`, `select`, `upload`, `get_text`, and `screenshot` functions using Playwright’s sync API. Evidence returned includes the final URL, DOM checks, text values, and saved screenshots.
+  * On any selector failure, captures the page’s DOM and a screenshot to `runner_windows/artifacts/` and returns a `blocked` status with reason `selector_failed`.
+  * Falls back to a parked state with reason `runner_setup_required` when Playwright is not installed, prompting the operator to run `setup.ps1`.
+* Added a helper `_capture_debug` that saves DOM and screenshot files whenever a selector action fails, facilitating recipe updates.
+* Modified tests (`tests/test_actions_web.py` and `tests/test_recipes_engine.py`) to account for the new parked reason `runner_setup_required` when Playwright is missing. The tests continue to verify that web actions return a parked status in this environment and that variable expansion in recipes works correctly.
+* Updated `.gitignore` to ignore the new `runner_windows/artifacts/` directory and the secrets file, preventing accidental commits of artifacts or sensitive data.
+
+### Artifacts
+
+* `runner_windows/setup.ps1` – setup script detailing manual installation steps for Python 3.11, Playwright, and Tesseract.
+* `runner_windows/README.md` – instructions for setting up and running the Windows runner.
+* `runner_windows/actions/web_adapter.py` – Playwright‑backed web adapter with full browser automation capabilities and error handling.
+* `runner_windows/artifacts/` – directory where DOM snapshots and screenshots are saved on selector failure (ignored by Git).
+* Updated tests covering the new behavior of the web adapter and recipe engine.
+
+### What’s next
+
+The next milestone (M14) introduces the scheduler. We will create the `feature/m14-scheduler` branch and implement a scheduler that reads and writes `schedules/jobs.yaml`, supports cron and interval triggers with jitter, honors quiet hours and budget caps, persists jobs across restarts, and appends a nightly summary to the project log. After implementing the scheduler and its unit tests, we will merge the branch and update this log accordingly.
+
+### Notes
+
+Because the environment does not include Playwright or Tesseract, the web adapter currently returns a parked status prompting setup. The `setup.ps1` script provides step‑by‑step instructions for installing these dependencies on a Windows machine. Once Playwright is available, the adapter will execute real browser actions as defined. Screenshots and DOM dumps generated on errors help developers update recipes when site selectors change.
