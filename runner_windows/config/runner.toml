@@ -1,0 +1,17 @@
+[auth]
+# The OpenAI API key used by the runner. Reference only via alias or local value; never store plain keys in logs.
+openai_api_key = "ALIAS or local value"
+
+[vault]
+# Whether to use an external secret vault. When true, secrets are fetched from a vault and not stored locally.
+enabled = false
+
+[email]
+# The master email address used for account signups and verifications. Use an alias or mask when referencing.
+master_email = "alias or value"
+
+[password_policy]
+# How the runner should handle passwords for new accounts. Options:
+# generate_strong – automatically generate strong random passwords.
+# use_provided – use passwords provided by the user or config.
+generate_strong = true

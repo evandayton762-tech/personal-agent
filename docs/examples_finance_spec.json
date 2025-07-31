@@ -1,0 +1,27 @@
+{
+  "goal": "Rebalance my portfolio across US tech stocks using paper trading.",
+  "domains": ["finance"],
+  "constraints": {
+    "budget": {
+      "per_trade_cap": 1000,
+      "daily_cap": 5000
+    }
+  },
+  "parameters": {
+    "mode": "paper",
+    "universe": ["AAPL", "MSFT", "GOOGL", "AMZN"],
+    "per_trade_cap": 1000,
+    "daily_cap": 5000,
+    "data_provider": "alpha_vantage_free",
+    "broker": "alpaca_paper"
+  },
+  "notes": {
+    "step_to_evidence": {
+      "fetch_data": ["prices_json", "positions_snapshot"],
+      "compute_diffs": [],
+      "place_orders": ["order_json", "fills"],
+      "verify_orders": ["broker_snapshot"],
+      "schedule_nightly": ["schedule_entry"]
+    }
+  }
+}

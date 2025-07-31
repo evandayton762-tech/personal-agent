@@ -1,0 +1,15 @@
+[models]
+# Default models used by the planner and summarizer. These may be changed in future versions.
+planner = "gpt-4o-mini"
+summarizer = "gpt-4o-mini"
+
+[limits]
+# Maximum tokens allowed per task and per day. These values should be tuned to balance cost and capability.
+per_task_tokens = 8000
+daily_tokens = 25000
+
+[behavior]
+# Budget behavior flags.
+free_only = true
+ask_before_spend = true
+quiet_hours = "02:00-06:00"

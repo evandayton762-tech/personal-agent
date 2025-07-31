@@ -1,0 +1,1 @@
+Open https://oauth… and enter code XXXX-XXXX to authorize Docs & Drive (edit files I create). I will store a refresh token in your user profile and use it silently next time. You can revoke any time in Google Security.

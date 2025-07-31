@@ -1,0 +1,20 @@
+{
+  "goal": "Build a simple landing page for my coaching service, deploy it to Netlify, and connect the contact form to a Google Sheet.",
+  "domains": ["leadgen"],
+  "constraints": {},
+  "parameters": {
+    "output_type": "Static HTML page",
+    "platform": "Netlify",
+    "asset_source": "generate assets automatically",
+    "cadence": "one-time"
+  },
+  "notes": {
+    "step_to_evidence": {
+      "generate_page": ["html_file", "screenshot"],
+      "deploy": ["live_url"],
+      "configure_form": ["form_backend_config"],
+      "test_form": ["test_entry", "sheet_row"],
+      "schedule_updates": ["schedule_entry"]
+    }
+  }
+}
