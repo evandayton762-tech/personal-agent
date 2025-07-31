@@ -418,3 +418,47 @@ The next milestone (M14) introduces the scheduler. We will create the `feature/m
 ### Notes
 
 Because the environment does not include Playwright or Tesseract, the web adapter currently returns a parked status prompting setup. The `setup.ps1` script provides step‑by‑step instructions for installing these dependencies on a Windows machine. Once Playwright is available, the adapter will execute real browser actions as defined. Screenshots and DOM dumps generated on errors help developers update recipes when site selectors change.
+
+## Milestone M14 — Scheduler
+
+**Date**: 2025-07-31
+
+**Branch**: `feature/m14-scheduler`
+
+### What was done
+
+* Added a persistent, in‑memory scheduler module (`orchestrator/scheduler.py`) implementing a simple job scheduler that reads and writes job definitions to `schedules/jobs.yaml`. The scheduler supports:
+  * **Interval and cron triggers**: Jobs can specify an `interval` in seconds or a basic cron expression (minute and hour fields) indicating when to run.
+  * **Quiet hours**: Jobs due between 02:00 and 06:00 local time are deferred to the end of quiet hours on the same or next day.
+  * **Random jitter**: A random delay of 2–5 minutes is added to scheduled times to avoid predictable bursts. Jitter is applied only for intervals greater than zero and cron schedules.
+  * **Budget enforcement**: Before executing a job, the scheduler checks the daily token usage via the cost ledger. If the daily cap (25 k tokens) is exceeded, the job is deferred to the next day.
+  * **Persistence**: Jobs are loaded from and saved to `schedules/jobs.yaml`. Timestamps are stored as ISO strings, ensuring that jobs survive orchestrator restarts.
+  * **Run summary hook**: A `nightly_summary` method is provided as a demonstration of how nightly jobs can append summaries to `docs/PROJECT_LOG.md`.
+* Added a `Scheduler` class with methods to register job functions, add jobs, compute next run times, apply jitter, defer for quiet hours and budget caps, and run pending jobs.
+* Implemented unit tests (`tests/test_scheduler.py`) using `unittest` to verify:
+  * Interval jobs run when due, record their execution time, update `next_run`, and persist across reloads.
+  * Jobs scheduled during quiet hours are deferred to after quiet hours.
+  * Jobs are deferred when the daily token cap is exceeded by monkeypatching the cost ledger.
+* Added a `tests/__init__.py` to adjust `sys.path` during test discovery so that `unittest discover` can import project modules. Without this file, test discovery did not run any tests.
+* Created `schedules/jobs.yaml` as the initial job store with an empty `jobs` list.
+
+### Artifacts
+
+* `orchestrator/scheduler.py` – scheduler implementation with persistence, quiet hours, jitter, and budget checks.
+* `schedules/jobs.yaml` – YAML file storing scheduled job definitions (initially empty).
+* `tests/test_scheduler.py` – unit tests for scheduler behavior.
+* `tests/__init__.py` – ensures tests are discovered properly by `unittest` by adjusting the Python path.
+
+### Acceptance summary
+
+* A demo job scheduled with a zero‑second interval runs when `run_pending()` is invoked, records its execution, updates its next scheduled time, and persists to the YAML job store. Reloading the scheduler from the same file restores the job correctly.
+* Jobs scheduled during quiet hours or when the daily budget cap has been reached are deferred until after quiet hours or to the next day, respectively.
+* Unit tests pass and CI remains green.
+
+### What’s next
+
+The next milestone (M15) implements the DocsAdapter and integrates OAuth Device Code flow. We will create the `feature/m15-docs-adapter` branch and implement the `DocsAdapter` functions (ensure_doc, append_section, insert_table, insert_image, link_artifact, update_toc), displaying the OAuth message on first use and storing the refresh token locally. After each merged PR, a section summarizing changes will be appended to the Google Doc or to `/docs/PROJECT_LOG.md` if OAuth is declined. Unit tests will verify that sections are appended or that the adapter parks when authorization is required.
+
+### Notes
+
+The scheduler currently runs jobs only when `run_pending()` is invoked; it does not create a background thread. In a long‑running orchestrator, a loop would call `run_pending()` periodically. Random jitter is always positive to avoid scheduling jobs in the past. The `nightly_summary` method appends a placeholder entry to the project log; future implementations should collect real run data and costs.
