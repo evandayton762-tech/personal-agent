@@ -13,6 +13,7 @@ authors = ["Your Name <you@example.com>"]
 python = "^3.11"
 
 [tool.poetry.dev-dependencies]
+# No dev dependencies defined yet. Unit tests use the built-in unittest module.
 
 [build-system]
 requires = ["poetry-core"]
