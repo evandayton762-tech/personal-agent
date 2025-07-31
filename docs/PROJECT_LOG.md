@@ -88,3 +88,35 @@ Milestone M3 focuses on the dynamic intake manager. We will create the `feature/
 ### Notes
 
 Tests run successfully in the local environment using `unittest`. As remote push and PR functionality remain unavailable, we continue to merge branches locally and document progress in the project log.
+
+## Milestone M3 — Intake Manager
+
+**Date**: 2025-07-31
+
+**Branch**: `feature/intake-manager`
+
+### What was done
+
+* Implemented MVI definitions and multiple‑choice options for supported domains in `orchestrator/intake/mvi.py`.
+* Added functions for computing the Information Quality Score (IQS) based on completeness, actionability, risk, and ambiguity in `orchestrator/intake/iqs.py`.
+* Built a question generator in `orchestrator/intake/questioner.py` that creates batched multiple‑choice or free‑text questions for missing parameters.
+* Created a simple consent resolver in `orchestrator/intake/consent.py` returning default consent bundles.
+* Implemented `IntakeManager` in `orchestrator/intake/intake_manager.py` to coordinate scoring, question generation, answer application, and readiness determination.
+* Added unit tests (`tests/test_intake_manager.py`) verifying that a vague finance request results in one batch of questions and reaches readiness after providing answers.
+
+### Artifacts
+
+* `orchestrator/intake/mvi.py` – MVI definitions and options.
+* `orchestrator/intake/iqs.py` – IQS computation.
+* `orchestrator/intake/questioner.py` – question generator.
+* `orchestrator/intake/consent.py` – default consent resolver.
+* `orchestrator/intake/intake_manager.py` – intake manager class.
+* `tests/test_intake_manager.py` – unit tests for intake manager functionality.
+
+### What’s next
+
+Milestone M4 introduces the cost governor and ledger. We will create the `feature/cost-governor` branch, implement token estimation per step and plan, tripwire logic, and a cost ledger that records token and monetary usage. Unit tests will ensure downscoping and correct aggregation.
+
+### Notes
+
+The intake manager currently uses simplified heuristics for scoring and expected gain. These will be refined in future iterations. As before, branches are merged locally due to lack of remote connectivity.
