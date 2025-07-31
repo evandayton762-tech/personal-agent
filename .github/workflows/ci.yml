@@ -30,5 +30,6 @@ jobs:
         run: echo "Lint placeholder: no files to lint"
       - name: Format check
         run: echo "Format check: no code to format"
-      - name: Run no-op tests
-        run: echo "No-op tests passed"
+      - name: Run tests
+        run: |
+          poetry run pytest -q
