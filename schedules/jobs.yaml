@@ -1,0 +1,11 @@
+---
+# Job schedule definitions for the personal agent.
+#
+# Each entry represents a recurring job. Supported fields:
+#   cron: a five‑field cron expression (minute, hour, day of month, month, day of week)
+#   interval: number of seconds between runs
+#   task_ref: a reference to the task or function to execute
+#   constraints: optional dictionary with additional settings
+# The scheduler will persist next_run timestamps and other state in memory when loaded.
+
+jobs: []
