@@ -351,3 +351,35 @@ Milestone M12 introduces the planner using an LLM (mock for now) to generate str
 ### Notes
 
 Budget enforcement now interacts with the ledger file stored under `memory/cost_ledger.jsonl`. Tests ensure the ledger is reset between runs to avoid interference. Future enhancements may allow configurable caps via the budget configuration file and integrate warning messages when 80 % of the cap is reached. The simplified token estimation still uses static values per adapter type.
+
+## Milestone M12 — Planner (Structured JSON Output)
+
+**Date**: 2025-07-31
+
+**Branch**: `feature/m12-planner-structured`
+
+### What was done
+
+* Created `orchestrator/planner.py` implementing a heuristic `plan_project` function. Instead of invoking an external LLM, the planner constructs a minimal viable plan based on the domains specified in the project specification:
+  * For the **finance** domain, the planner assembles steps to fetch data, compute portfolio diffs, place paper orders, verify orders, and schedule a nightly summary. Each step is assigned an adapter type (`finance`, `files`, or `schedule`) and an estimated token budget. Secrets required (e.g., `BROKER_KEY`) are identified.
+  * For the **leadgen** domain, the planner produces steps to generate a page, deploy it, configure the form backend, test the form, and schedule updates. Adapters such as `files`, `web`, and `schedule` are used.
+  * For unknown or unsupported domains, the planner falls back to a single generic step using the `files` adapter.
+* Integrated token estimation and downscoping: The planner uses `estimate_plan` and `downscope_plan` from the cost governor to ensure that the plan’s total estimated tokens do not exceed a per‑task cap (default 8 k). If necessary, steps beyond the cap are trimmed while ensuring at least one step remains.
+* Applied schema validation: The planner calls `validate_plan` to ensure the generated plan conforms to the defined schema before returning it.
+* Added unit tests (`tests/test_planner.py`) that:
+  * Load the example finance and lead‑generation specifications from `docs/examples_finance_spec.json` and `docs/examples_leadgen_spec.json` and verify that the planner returns a valid plan with allowed adapter types and appropriate number of steps.
+  * Confirm that an unknown domain produces a single generic step using the `files` adapter.
+  * Validate that each returned plan passes `validate_plan`.
+
+### Artifacts
+
+* `orchestrator/planner.py` – heuristic planner producing structured Plan objects.
+* `tests/test_planner.py` – unit tests covering finance, leadgen, and unknown domain scenarios.
+
+### What’s next
+
+Milestone M13 will wire the runner dispatch so that steps with various adapter types route to the appropriate adapter implementations. The dispatch table will integrate the previously developed web, files, OCR, and secrets adapters, and return evidence objects. Retry logic for transient errors will be introduced.
+
+### Notes
+
+The planner currently uses simple heuristics and static token estimates instead of an LLM. This approach satisfies the requirement to produce schema‑valid plans while respecting per‑task token caps. When access to LLMs becomes available, this module can be upgraded to generate richer plans via a prompt while maintaining the same interface.
