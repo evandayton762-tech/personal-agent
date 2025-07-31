@@ -462,3 +462,38 @@ The next milestone (M15) implements the DocsAdapter and integrates OAuth Device 
 ### Notes
 
 The scheduler currently runs jobs only when `run_pending()` is invoked; it does not create a background thread. In a long‑running orchestrator, a loop would call `run_pending()` periodically. Random jitter is always positive to avoid scheduling jobs in the past. The `nightly_summary` method appends a placeholder entry to the project log; future implementations should collect real run data and costs.
+
+## Milestone M15 — DocsAdapter with OAuth Device Code
+
+**Date**: 2025-07-31
+
+**Branch**: `feature/m15-docs-adapter`
+
+### What was done
+
+* Implemented a `DocsAdapter` in `orchestrator/docs_adapter.py` that abstracts interactions with Google Docs. Given the offline environment, the adapter provides a graceful fallback to local Markdown files while still exposing the required functions:
+  * `ensure_doc(project_name)` checks for an OAuth token in `runner_windows/config/google_token.json`. If no token is present, it returns a parked object with reason `oauth_required` and includes the exact device code message from `docs/messages_oauth_docs.txt`. If a token exists, the function returns `ok` and a document identifier (the path to `docs/PROJECT_LOG.md`).
+  * `append_section`, `insert_table`, `insert_image`, `link_artifact`, and `update_toc` write content into the local project log when authorized. These functions build Markdown content for headings, tables, images, and links. When unauthorized, they return a parked status with the OAuth message.
+  * A helper `_append_to_log` ensures the `PROJECT_LOG.md` file is created if necessary and appends content atomically.
+* Added tests (`tests/test_docs_adapter.py`) covering both the authorized and unauthorized flows:
+  * Without a token file, `ensure_doc` and subsequent operations return a parked status and do not modify any files.
+  * With a dummy token file, all adapter functions operate on a temporary `PROJECT_LOG.md`, appending sections, tables, image placeholders, and hyperlinks. The test verifies that the expected Markdown syntax appears in the log.
+* Updated test discovery via `tests/__init__.py` (from the previous milestone) ensures that the new tests run as part of `python -m unittest discover`.
+
+### Artifacts
+
+* `orchestrator/docs_adapter.py` – adapter implementation with fallback and OAuth parking.
+* `tests/test_docs_adapter.py` – unit tests for the DocsAdapter.
+
+### Acceptance summary
+
+* In the absence of a token, the adapter returns a parked object with reason `oauth_required` and includes the exact device code message from `docs/messages_oauth_docs.txt`.
+* When a token file is present, all document operations succeed and write to the local project log. The tests confirm that headings, tables, images, and links are correctly formatted.
+
+### What’s next
+
+The next milestone (M16) introduces the finance pack in paper mode. We will create the `feature/m16-finance-paper` branch to implement a BrokerAdapter for Alpaca paper trading and a DataAdapter for a free provider (Alpha Vantage or Polygon Basic). Pre‑trade checks, rate‑limit guards, and evidence collection will be included. Unit tests will verify that a small paper order can be placed and that missing secrets park with a clear reason.
+
+### Notes
+
+Because actual Google Docs integration requires network access and user authorization, the DocsAdapter simulates document operations using the local `PROJECT_LOG.md`. The OAuth device code message comes directly from the roadmap specification. When connectivity and authorization become available, this module can be extended to use the Google Docs API, while preserving the same function signatures.
