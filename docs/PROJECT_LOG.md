@@ -147,3 +147,34 @@ The next milestone, M5, introduces the skeleton of the orchestrator service with
 ### Notes
 
 Static token estimates are conservative placeholders; future improvements will refine them. The ledger path is relative to the repository (`memory/cost_ledger.jsonl`) and ensures that evidence persists across runs.
+
+## Milestone M5 — Orchestrator Service Skeleton
+
+**Date**: 2025-07-31
+
+**Branch**: `feature/m5-orchestrator-service`
+
+### What was done
+
+* Created `orchestrator/service.py` implementing a FastAPI application with the following endpoints:
+  - `GET /health` returns a simple status check.
+  - `POST /plan` returns a static minimal plan for testing.
+  - `POST /enqueue` accepts a plan or step and enqueues the contained steps.
+  - `GET /runs` returns a list of executed step results.
+  - `GET /parked` returns a list of parked items.
+  - `WebSocket /ws` dispatches queued steps to a connected runner and receives `StepResult` objects; results are recorded in runs or parked lists depending on status.
+* Implemented in‑memory stores (`queue`, `runs`, `parked`) for managing execution state.
+* Added unit tests (`tests/test_orchestrator_service.py`) that verify the health endpoint, plan creation, enqueueing, WebSocket communication for a successful step, and proper handling of blocked steps.
+
+### Artifacts
+
+* `orchestrator/service.py` – FastAPI service skeleton with endpoints and WebSocket handler.
+* `tests/test_orchestrator_service.py` – unit tests covering the service’s basic behavior.
+
+### What’s next
+
+Milestone M6 will implement the runner skeleton. We will create the `feature/m6-runner-skeleton` branch, build a runner loop that connects via WebSocket, sends heartbeats, validates steps, dispatches to placeholder actions, and implements a kill switch with logging. Tests will ensure the runner processes a dummy step and logs events correctly.
+
+### Notes
+
+The orchestrator currently returns a hardcoded plan and does not support persistence across restarts. Future milestones will extend the planner and queue functionality, and integrate the cost governor and budget enforcement.
