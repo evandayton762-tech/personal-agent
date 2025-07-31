@@ -238,3 +238,35 @@ Milestone M8 focuses on the secrets adapter. We will create `feature/m8-actions-
 ### Notes
 
 The OCR adapter currently falls back to a parked state when dependencies are absent. This is acceptable under the free‑only policy, as installing Tesseract would require additional system packages not present in the container. In environments where Tesseract is available, the adapter will return extracted text. Future improvements may provide a more robust screenshot implementation using OS APIs or pyautogui.
+
+## Milestone M8 — Secrets Adapter
+
+**Date**: 2025-07-31
+
+**Branch**: `feature/m8-actions-secrets`
+
+### What was done
+
+* Introduced a secrets adapter in `runner_windows/actions/secrets_adapter.py` with functions `get` and `set`:
+  * `get(alias)` searches for a secret alias in environment variables first, then in a local JSON file (`runner_windows/config/secrets.json`). If the alias is not found, it returns a parked dictionary with reason `missing_secret`.
+  * `set(alias, value)` stores a secret in the local JSON file without ever logging the value. The secrets file is ignored by Git via an update to `.gitignore`.
+* Implemented helper functions to load and save the secrets file, ensuring the directory exists and handling corrupted JSON gracefully.
+* Added unit tests (`tests/test_actions_secrets.py`) verifying that:
+  * Secrets can be set and retrieved correctly.
+  * Missing aliases result in a parked object.
+  * When using the `Runner` to log messages that reference an alias, the secret value is not recorded in the log file.
+* Updated `.gitignore` to exclude `runner_windows/config/secrets.json` to prevent accidental commits of secret values.
+
+### Artifacts
+
+* `runner_windows/actions/secrets_adapter.py` – secrets adapter implementation.
+* `tests/test_actions_secrets.py` – unit tests for secrets handling and log redaction.
+* Updated `.gitignore` – now ignoring the secrets JSON file.
+
+### What’s next
+
+Milestone M9 will implement the web adapter using Playwright, persistent profiles, and selector drift handling. A new branch `feature/m9-actions-web` will be created to build functions for opening pages, waiting for selectors, typing, clicking, selecting dropdowns, uploading files, extracting text, and capturing screenshots. Tests will verify basic interactions against a local test page and proper blocking on selector failure.
+
+### Notes
+
+The secrets adapter intentionally writes to a local JSON file outside of version control and never logs secret values. Vault integrations (Bitwarden, 1Password) remain unimplemented and will result in a parked reason if requested. Redaction rules are enforced in tests by checking that secret values do not appear in runner logs.
