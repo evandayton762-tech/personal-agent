@@ -1,0 +1,14 @@
+{
+  "name": "Personal Agent Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/python:3.11",
+  // Install additional tools after container creation.
+  // We want Playwright and Tesseract to be available, but they may require paid installs.
+  // To stay within the free-only policy, installation commands are provided in comments only.
+  // Uncomment and modify the postCreateCommand to install packages if you have allowances.
+  "postCreateCommand": "# Install Playwright and Tesseract\n# pip install playwright\n# playwright install\n# sudo apt-get update && sudo apt-get install -y tesseract-ocr",
+  "features": {
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.11"
+    }
+  }
+}
