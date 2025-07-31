@@ -324,3 +324,30 @@ Milestone M11 will integrate the cost governor with queue dispatch to enforce bu
 ### Notes
 
 Because Playwright cannot be installed in this environment, the recipe engine currently parks immediately when attempting to open a URL. This still satisfies the specification by properly propagating the parked reason. Once browser automation is available, the engine will execute the steps and enforce success checks. Variable expansion intentionally omits unknown secrets to avoid leaking sensitive information.
+
+## Milestone M11 — Budget Enforcement
+
+**Date**: 2025-07-31
+
+**Branch**: `feature/m11-budget-enforcement`
+
+### What was done
+
+* Integrated the cost ledger into the orchestrator service to enforce daily token caps. Defined `MAX_DAILY_TOKENS`, `WARN_THRESHOLD`, and `STOP_THRESHOLD` constants (25000 tokens, 80 % and 90 % respectively).
+* Added a `/budget/today` endpoint returning the aggregated token and USD totals for the current day, the maximum tokens allowed, thresholds, and the used ratio.
+* Modified the WebSocket `/ws` endpoint to check the projected token usage before dispatching each step. When dispatching a step would exceed the stop threshold (≥ 90 % of the daily cap), the step is not sent to the runner but is instead appended to the `parked` list with reason `budget` and a `next_try` of “tomorrow”.
+* Updated the `/runs` endpoint to include the current budget status, so run summaries reflect token usage.
+* Implemented a unit test (`tests/test_budget_enforcement.py`) that preloads the ledger with sufficient tokens to exceed the stop threshold, then enqueues a step and verifies that it is parked and that the budget endpoint reports high usage. The test cleans up the ledger file in `tearDown` to prevent cross‑test contamination.
+
+### Artifacts
+
+* Updated `orchestrator/service.py` – now enforces budget caps on dispatch, records tokens to the ledger after each step, exposes `/budget/today`, and includes budget status in `/runs`.
+* `tests/test_budget_enforcement.py` – verifies refusal of a step when the cap is reached and correct budget endpoint behavior.
+
+### What’s next
+
+Milestone M12 introduces the planner using an LLM (mock for now) to generate structured plans based on the intake summary and consent bundle. We will create `feature/m12-planner-structured` to implement a single‑pass planner, validate its output, and downscope plans when estimates exceed caps.
+
+### Notes
+
+Budget enforcement now interacts with the ledger file stored under `memory/cost_ledger.jsonl`. Tests ensure the ledger is reset between runs to avoid interference. Future enhancements may allow configurable caps via the budget configuration file and integrate warning messages when 80 % of the cap is reached. The simplified token estimation still uses static values per adapter type.
